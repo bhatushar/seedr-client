@@ -1,0 +1,20 @@
+{
+  "name": "seedr-client",
+  "version": "0.1.1",
+  "description": "Seedr.cc download client to connect with Sonarr/Radarr",
+  "main": "src/index.ts",
+  "author": "Tushar Bhatt",
+  "license": "MIT",
+  "scripts": {
+    "dev": "nodemon src/index.ts",
+    "start": "ts-node src/index.ts",
+    "build": "tsc"
+  },
+  "devDependencies": {
+    "@types/node": "^17.0.15",
+    "nodemon": "^2.0.15",
+    "ts-node": "^10.4.0",
+    "tsc": "^2.0.4",
+    "typescript": "^4.5.5"
+  }
+}
