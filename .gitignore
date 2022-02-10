@@ -4,3 +4,4 @@ yarn-error.log
 .env
 prisma/*.db
 prisma/*.db-journal
+dump
