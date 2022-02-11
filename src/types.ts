@@ -11,7 +11,7 @@ enum TorrentFileType {
 
 enum TorrentStatus {
   NEW = "new",
-  ADDED_TO_SEEDR = "addedToSeedr",
+  UPLOADED = "uploaded",
   DOWNLOADING = "downloading",
   UNZIPPING = "unzipping",
   COMPLETED = "completed",
