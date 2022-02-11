@@ -102,4 +102,11 @@ async function downloadFolder(
   }
 }
 
-export { getRootContent, addTorrentMagnet, addTorrentFile, downloadFolder };
+export {
+  ISeedrFolder,
+  ISeedrTorrent,
+  getRootContent,
+  addTorrentMagnet,
+  addTorrentFile,
+  downloadFolder,
+};
