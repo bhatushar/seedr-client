@@ -1,6 +1,11 @@
 import fs from "fs/promises";
 import cron from "node-cron";
-import { SONARR_BLACKHOLE, RADARR_BLACKHOLE } from "./init-config";
+import {
+  SONARR_BLACKHOLE,
+  RADARR_BLACKHOLE,
+  SONARR_DOWNLOAD,
+  RADARR_DOWNLOAD,
+} from "./init-config";
 import checkForNewTorrents from "./jobs/new-torrents";
 import uploadToSeedr from "./jobs/upload-to-seedr";
 
@@ -10,6 +15,8 @@ async function main() {
     await Promise.all([
       fs.mkdir(SONARR_BLACKHOLE, { recursive: true }),
       fs.mkdir(RADARR_BLACKHOLE, { recursive: true }),
+      fs.mkdir(SONARR_DOWNLOAD, { recursive: true }),
+      fs.mkdir(RADARR_DOWNLOAD, { recursive: true }),
     ]);
 
     // Every 5 seconds

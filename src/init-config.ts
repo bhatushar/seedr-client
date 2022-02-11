@@ -16,6 +16,12 @@ const SONARR_BLACKHOLE =
 const RADARR_BLACKHOLE =
   process.env.RADARR_BLACKHOLE || path.join(__dirname, "../dump");
 
+// Download paths
+const SONARR_DOWNLOAD =
+  process.env.SONARR_DOWNLOAD || path.join(SONARR_BLACKHOLE, "download");
+const RADARR_DOWNLOAD =
+  process.env.RADARR_DOWNLOAD || path.join(RADARR_BLACKHOLE, "download");
+
 const prisma = new PrismaClient();
 
 export {
@@ -24,4 +30,6 @@ export {
   SEEDR_PASSWORD,
   SONARR_BLACKHOLE,
   RADARR_BLACKHOLE,
+  SONARR_DOWNLOAD,
+  RADARR_DOWNLOAD,
 };

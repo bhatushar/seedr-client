@@ -7,6 +7,9 @@ declare global {
       // Folders to watch for new torrent files
       SONARR_BLACKHOLE: string;
       RADARR_BLACKHOLE: string;
+      // Path to download files in
+      SONARR_DOWNLOAD: string;
+      RADARR_DOWNLOAD: string;
     }
   }
 }
