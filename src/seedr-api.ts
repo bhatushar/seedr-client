@@ -24,7 +24,7 @@ async function getRootContent(): Promise<ISeedrFolder[]> {
         password: SEEDR_PASSWORD,
       },
     });
-    return response.data;
+    return response.data.folders;
   } catch (error) {
     console.error(error);
     return [];
