@@ -13,7 +13,7 @@ enum TorrentStatus {
   NEW = "new",
   UPLOADED = "uploaded",
   DOWNLOADING = "downloading",
-  UNZIPPING = "unzipping",
+  DOWNLOADED = "downloaded",
   COMPLETED = "completed",
 }
 

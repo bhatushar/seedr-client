@@ -11,7 +11,7 @@ model Torrent {
   filename      String
   type          String // Enum("torrent", "magnet")
   media_manager String // ENUM("sonarr", "radarr")
-  status        String  @default("new") // ENUM("new", "uploaded", "downloading", "unzipping", "completed")
+  status        String  @default("new") // ENUM("new", "uploaded", "downloading", "downloaded", "completed")
   seedr_id      Int?    @unique
   torrent_name  String? @unique
 
