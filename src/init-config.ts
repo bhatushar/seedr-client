@@ -22,6 +22,12 @@ const SONARR_DOWNLOAD =
 const RADARR_DOWNLOAD =
   process.env.RADARR_DOWNLOAD || path.join(RADARR_BLACKHOLE, "download");
 
+// Watch paths
+const SONARR_WATCH =
+  process.env.SONARR_WATCH || path.join(SONARR_BLACKHOLE, "watch");
+const RADARR_WATCH =
+  process.env.RADARR_WATCH || path.join(RADARR_BLACKHOLE, "watch");
+
 const prisma = new PrismaClient();
 
 export {
@@ -32,4 +38,6 @@ export {
   RADARR_BLACKHOLE,
   SONARR_DOWNLOAD,
   RADARR_DOWNLOAD,
+  SONARR_WATCH,
+  RADARR_WATCH,
 };

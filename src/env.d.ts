@@ -10,6 +10,9 @@ declare global {
       // Path to download files in
       SONARR_DOWNLOAD: string;
       RADARR_DOWNLOAD: string;
+      // Move files here after downloading
+      SONARR_WATCH: string;
+      RADARR_WATCH: string;
     }
   }
 }
