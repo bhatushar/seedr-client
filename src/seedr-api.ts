@@ -1,7 +1,8 @@
 import axios from "axios";
 import FormData from "form-data";
-import { createReadStream, createWriteStream } from "fs";
+import { createReadStream } from "fs";
 import { SEEDR_EMAIL, SEEDR_PASSWORD } from "./init-config";
+import unzipper from "unzipper";
 
 interface ISeedrFolder {
   id: number;
@@ -79,8 +80,8 @@ async function addTorrentFile(
 async function downloadFolder(
   id: number,
   download_path: string,
-  on_success?: () => void,
-  on_fail?: (error?: any) => void
+  on_success: () => Promise<void> = () => Promise.resolve(undefined),
+  on_fail: (error?: any) => Promise<void> = () => Promise.resolve(undefined)
 ) {
   try {
     const response = await axios.get(
@@ -93,12 +94,12 @@ async function downloadFolder(
         responseType: "stream",
       }
     );
-    const wstream = response.data.pipe(createWriteStream(download_path));
-    wstream.on("finish", on_success);
-    wstream.on("error", on_fail);
+    const parse_stream = unzipper.Extract({ path: download_path });
+    response.data.pipe(parse_stream);
+    parse_stream.on("finish", on_success);
+    parse_stream.on("error", on_fail);
   } catch (error) {
-    console.error(error);
-    if (on_fail) on_fail(error);
+    on_fail(error);
   }
 }
 
