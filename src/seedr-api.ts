@@ -4,6 +4,9 @@ import { createReadStream } from "fs";
 import { SEEDR_EMAIL, SEEDR_PASSWORD } from "./init-config";
 import unzipper from "unzipper";
 
+/**
+ * Structure of Seedr Folder response
+ */
 interface ISeedrFolder {
   id: number;
   name: string;
@@ -11,6 +14,9 @@ interface ISeedrFolder {
   last_update: string;
 }
 
+/**
+ * Structure of response data for uploading torrent to Seedr
+ */
 interface ISeedrTorrent {
   result: boolean;
   code: number;
@@ -19,6 +25,9 @@ interface ISeedrTorrent {
   torrent_hash: string;
 }
 
+/**
+ * @returns List of folders on Seedr
+ */
 async function getRootContent(): Promise<ISeedrFolder[]> {
   try {
     const response = await axios.get("https://www.seedr.cc/rest/folder", {
@@ -34,6 +43,12 @@ async function getRootContent(): Promise<ISeedrFolder[]> {
   }
 }
 
+/**
+ * Adds a torrent to Seedr via magnet link
+ *
+ * @param magnet_link
+ * @returns Uploaded torrent data
+ */
 async function addTorrentMagnet(
   magnet_link: string
 ): Promise<ISeedrTorrent | undefined> {
@@ -56,6 +71,12 @@ async function addTorrentMagnet(
   }
 }
 
+/**
+ * Adds a torrent to Seedr via torrent file
+ *
+ * @param file_path
+ * @returns Uploaded torrent data
+ */
 async function addTorrentFile(
   file_path: string
 ): Promise<ISeedrTorrent | undefined> {
@@ -79,6 +100,14 @@ async function addTorrentFile(
   }
 }
 
+/**
+ * Downloads a folder from Seedr and unzips the download stream
+ *
+ * @param id Seedr folder ID
+ * @param download_path Path to download files in
+ * @param on_success Called if download completes successfully
+ * @param on_fail Called if download fails
+ */
 async function downloadFolder(
   id: number,
   download_path: string,

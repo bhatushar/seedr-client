@@ -11,6 +11,12 @@ type UploadedTorrents = Pick<
   "filename" | "media_manager" | "torrent_name"
 >;
 
+/**
+ * Sends upload request for provided torrent file or magnet link to Seedr
+ *
+ * @param torrents New torrents in the database
+ * @returns List of responses from Seedr for respective upload request
+ */
 async function attemptUpload(torrents: NewTorrents[]) {
   return Promise.all(
     torrents.map(async ({ filename, media_manager, type }) => {
@@ -35,6 +41,13 @@ async function attemptUpload(torrents: NewTorrents[]) {
   );
 }
 
+/**
+ * Merges torrent with it corresponding result and filters out unsuccessful uploads
+ *
+ * @param torrents New torrents in the database (same as the one passed to attemptUpload)
+ * @param results Seedr response to the upload request (returned by attemptUpload)
+ * @returns List of torrent objects that were successfully added to Seedr along with their `torrent_name`
+ */
 function getSuccessfulUploads(
   torrents: NewTorrents[],
   results: (seedrApi.ISeedrTorrent | undefined)[]
@@ -51,6 +64,10 @@ function getSuccessfulUploads(
   }, []);
 }
 
+/**
+ * Collects all newly added torrents (`status` = new) and attempts to upload them to Seedr.
+ * Updates status of torrents that were successfully uploaded and store their `torrent_name`.
+ */
 async function uploadToSeedr() {
   try {
     const torrents = await prisma.torrent.findMany({
@@ -67,9 +84,7 @@ async function uploadToSeedr() {
     await prisma.$transaction(
       uploaded_torrents.map(({ filename, media_manager, torrent_name }) => {
         return prisma.torrent.update({
-          where: {
-            filename_media_manager: { filename, media_manager },
-          },
+          where: { filename_media_manager: { filename, media_manager } },
           data: { torrent_name, status: TorrentStatus.UPLOADED },
         });
       })

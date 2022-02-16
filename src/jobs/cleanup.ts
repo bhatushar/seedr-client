@@ -9,12 +9,12 @@ import {
   RADARR_BLACKHOLE,
 } from "../init-config";
 
-// Remove database entires and download folders and torrents
+/**
+ *  For each completed torrent, delete the torrent file, download folder and database entry.
+ */
 async function cleanup() {
   const completed_torrents = await prisma.torrent.findMany({
-    where: {
-      status: TorrentStatus.COMPLETED,
-    },
+    where: { status: TorrentStatus.COMPLETED },
   });
   const download_paths = completed_torrents.map((torrent) => {
     let download_path =

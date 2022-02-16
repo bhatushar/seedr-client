@@ -2,6 +2,11 @@ import fs from "fs-extra";
 import { prisma, SONARR_BLACKHOLE, RADARR_BLACKHOLE } from "../init-config";
 import { MediaManager, TorrentFileType, TorrentStatus } from "../types";
 
+/**
+ * @param filename
+ * @returns Type of the file (TORRENT | MAGNET)
+ * @throws Error for non-torrent files
+ */
 function getTorrentFileType(filename: string): TorrentFileType {
   const filename_lower = filename.toLowerCase();
   if (filename_lower.endsWith(".torrent")) return TorrentFileType.TORRENT;
@@ -9,14 +14,19 @@ function getTorrentFileType(filename: string): TorrentFileType {
   throw new Error("Non-torrent file provided");
 }
 
-// True for *.torrent and *.magnet files
+/**
+ * @param filename
+ * @returns True for *.torrent and *.magnet files
+ */
 function isTorrentFile(filename: string): boolean {
   return [".torrent", ".magnet"].some((ext) =>
     filename.toLowerCase().endsWith(ext)
   );
 }
 
-// Check if a new torrent file is added to the blackhole directories and add them to the database
+/**
+ * Checks for new torrent files in the blackhole directories and adds them to the database
+ */
 async function checkForNewTorrents() {
   try {
     // Get all files from blackhole directories

@@ -12,7 +12,11 @@ import { MediaManager, TorrentStatus } from "../types";
 import * as seedrApi from "../seedr-api";
 import { Torrent } from "@prisma/client";
 
-// Return list of torrents that have finished downloading on Seedr
+/**
+ * Maps remote torrents that have finished downloading to local database entries using fuzzy matching.
+ *
+ * @returns Torrents that have finished downloading on Seedr along with their `seedr_id`
+ */
 async function getFinishedTorrents() {
   // Get all torrents that have finished downloading on Seedr
   const seedr_folders = await seedrApi.getRootContent();
@@ -39,7 +43,12 @@ async function getFinishedTorrents() {
   return finished_torrents;
 }
 
-// Store Seedr ID of finished torrents
+/**
+ * Adds `seedr_id` to torrents that finished downloading on Seedr
+ *
+ * @param finished_torrents Torrents that have finished downloading on Seedr
+ * @returns torrets with updated seedr_id
+ */
 async function saveSeedrIds(finished_torrents: Torrent[]) {
   return prisma.$transaction(
     finished_torrents.map((torrent) =>
@@ -51,15 +60,20 @@ async function saveSeedrIds(finished_torrents: Torrent[]) {
   );
 }
 
-// Move files from download directory to watch folder, update torrent status
+/**
+ * Event handler for successful download.
+ * Updates `status` to downloaded and move files to respective watch folder.
+ * On successful file relocation, update `status` to completed.
+ *
+ * @param seedr_id
+ * @param download_path
+ */
 const onDownloadSuccess = async (seedr_id: number, download_path: string) => {
   try {
     // Mark as downloaded so other downloads can start
     const downloaded_torrent = await prisma.torrent.update({
       where: { seedr_id },
-      data: {
-        status: TorrentStatus.DOWNLOADED,
-      },
+      data: { status: TorrentStatus.DOWNLOADED },
     });
     console.log("Download completed: ", download_path);
 
@@ -83,16 +97,19 @@ const onDownloadSuccess = async (seedr_id: number, download_path: string) => {
           media_manager: downloaded_torrent.media_manager,
         },
       },
-      data: {
-        status: TorrentStatus.COMPLETED,
-      },
+      data: { status: TorrentStatus.COMPLETED },
     });
   } catch (error) {
     console.error(error);
   }
 };
 
-// Revert torrent state to "uploaded" and remove partial downloads
+/**
+ * Revert `status` to uploaded and delete partially downloaded files.
+ *
+ * @param seedr_id
+ * @param download_path
+ */
 const onDownloadFail = async (seedr_id: number, download_path: string) => {
   await prisma.torrent.update({
     where: { seedr_id },
@@ -101,13 +118,16 @@ const onDownloadFail = async (seedr_id: number, download_path: string) => {
   await fs.rm(download_path, { recursive: true, force: true });
 };
 
+/**
+ * Collect torrents that have finished downloading on Seedr and save theirs `seedr_id`.
+ * Download torrent from Seedr, one at a time. Update `status` to downloading.
+ * Attachese event handlers to download stream.
+ */
 async function downloadFromSeedr() {
-  const activeDownloads = await prisma.torrent.count({
-    where: {
-      status: TorrentStatus.DOWNLOADING,
-    },
-  });
   // Only download one file at a time to preserve bandwidth
+  const activeDownloads = await prisma.torrent.count({
+    where: { status: TorrentStatus.DOWNLOADING },
+  });
   if (activeDownloads) return;
 
   const finished_torrents = await getFinishedTorrents();
