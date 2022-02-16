@@ -1,39 +1,39 @@
-import fs from "fs/promises";
+import fs from "fs-extra";
 import cron from "node-cron";
 import {
   SONARR_BLACKHOLE,
   RADARR_BLACKHOLE,
   SONARR_DOWNLOAD,
   RADARR_DOWNLOAD,
+  SONARR_WATCH,
+  RADARR_WATCH,
 } from "./init-config";
 import checkForNewTorrents from "./jobs/new-torrents";
 import uploadToSeedr from "./jobs/upload-to-seedr";
+import downloadFromSeedr from "./jobs/download-from-seedr";
+import cleanup from "./jobs/cleanup";
 
 async function main() {
   try {
-    // Create directories if not exists
-    await Promise.all([
-      fs.mkdir(SONARR_BLACKHOLE, { recursive: true }),
-      fs.mkdir(RADARR_BLACKHOLE, { recursive: true }),
-      fs.mkdir(SONARR_DOWNLOAD, { recursive: true }),
-      fs.mkdir(RADARR_DOWNLOAD, { recursive: true }),
-    ]);
+    // Create necessary directories
+    const directories = [
+      SONARR_BLACKHOLE,
+      RADARR_BLACKHOLE,
+      SONARR_DOWNLOAD,
+      RADARR_DOWNLOAD,
+      SONARR_WATCH,
+      RADARR_WATCH,
+    ];
+    await Promise.all(directories.map((dir) => fs.mkdirp(dir)));
 
-    // Every 5 seconds
-    cron.schedule("*/5 * * * * *", async () => await checkForNewTorrents());
-    // Every minute
-    cron.schedule("* * * * *", async () => await uploadToSeedr());
-    /*
-      Uploading is a separate job, instead of being a subroutine of checking for new torrents.
-      This ensures that uploading a newly added torrents fail at first, it can be retried without
-      depending on whether a new torrent is added.
-      Also, I just think it's better to invoke uploading at slower intervals since it takes a couple of seconds to finish.
-    */
+    // Schedule jobs
+    cron.schedule("0 * * * * *", async () => await checkForNewTorrents());
+    cron.schedule("15 * * * * *", async () => await uploadToSeedr());
+    cron.schedule("30 * * * * *", async () => await downloadFromSeedr());
+    cron.schedule("45 * * * * *", async () => cleanup());
   } catch (err) {
     console.error(err);
   }
 }
 
 main();
-
-// cron.schedule("*/5 * * * * *", () => {});
