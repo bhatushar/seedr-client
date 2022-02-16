@@ -6,7 +6,7 @@ function getTorrentFileType(filename: string): TorrentFileType {
   const filename_lower = filename.toLowerCase();
   if (filename_lower.endsWith(".torrent")) return TorrentFileType.TORRENT;
   else if (filename_lower.endsWith(".magnet")) return TorrentFileType.MAGNET;
-  throw "Non-torrent file provided";
+  throw new Error("Non-torrent file provided");
 }
 
 // True for *.torrent and *.magnet files
