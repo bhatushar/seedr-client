@@ -7,6 +7,8 @@ import unzipper from "unzipper";
 interface ISeedrFolder {
   id: number;
   name: string;
+  size: number;
+  last_update: string;
 }
 
 interface ISeedrTorrent {
