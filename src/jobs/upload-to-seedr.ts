@@ -80,7 +80,7 @@ async function uploadToSeedr() {
     const uploaded_torrents = getSuccessfulUploads(torrents, results);
     console.log("Torrents successfully uploaded: ", uploaded_torrents);
 
-    // Mark uploaded torrent as ADDED_TO_SEEDR and save their torrent name
+    // Mark uploaded torrent as UPLOADED and save their torrent name
     await prisma.$transaction(
       uploaded_torrents.map(({ filename, media_manager, torrent_name }) => {
         return prisma.torrent.update({
