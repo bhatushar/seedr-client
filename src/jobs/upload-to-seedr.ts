@@ -74,6 +74,7 @@ async function uploadToSeedr() {
       select: { filename: true, media_manager: true, type: true },
       where: { status: TorrentStatus.NEW },
     });
+    if (torrents.length === 0) return; // No torrents to upload
     console.log("Torrents to be uploaded: ", torrents);
 
     const results = await attemptUpload(torrents);
