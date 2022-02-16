@@ -1,5 +1,5 @@
 import path from "path";
-import fs from "fs/promises";
+import fs from "fs-extra";
 import { prisma, RADARR_BLACKHOLE, SONARR_BLACKHOLE } from "../init-config";
 import { MediaManager, TorrentFileType, TorrentStatus } from "../types";
 import * as seedrApi from "../seedr-api";

@@ -1,4 +1,4 @@
-import fs from "fs/promises";
+import fs from "fs-extra";
 import { prisma, SONARR_BLACKHOLE, RADARR_BLACKHOLE } from "../init-config";
 import { MediaManager, TorrentFileType, TorrentStatus } from "../types";
 
