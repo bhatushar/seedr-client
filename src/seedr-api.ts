@@ -28,7 +28,7 @@ interface ISeedrTorrent {
 /**
  * @returns List of folders on Seedr
  */
-async function getRootContent(): Promise<ISeedrFolder[]> {
+async function getRootFolders(): Promise<ISeedrFolder[]> {
   try {
     const response = await axios.get("https://www.seedr.cc/rest/folder", {
       auth: {
@@ -137,7 +137,7 @@ async function downloadFolder(
 export {
   ISeedrFolder,
   ISeedrTorrent,
-  getRootContent,
+  getRootFolders,
   addTorrentMagnet,
   addTorrentFile,
   downloadFolder,

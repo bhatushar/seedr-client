@@ -19,7 +19,7 @@ import { Torrent } from "@prisma/client";
  */
 async function getFinishedTorrents() {
   // Get all torrents that have finished downloading on Seedr
-  const seedr_folders = await seedrApi.getRootContent();
+  const seedr_folders = await seedrApi.getRootFolders();
   // Seedr may change the folder name if it contains illegal characters
   // So, using fuzzy searching to match remote torrents with local database
   const fuse = new Fuse(seedr_folders, { keys: ["name"] });
