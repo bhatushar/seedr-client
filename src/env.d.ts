@@ -13,6 +13,8 @@ declare global {
       // Move files here after downloading
       SONARR_WATCH: string;
       RADARR_WATCH: string;
+      // Path to log directory
+      LOG_DIR: string;
     }
   }
 }

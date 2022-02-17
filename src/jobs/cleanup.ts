@@ -7,38 +7,43 @@ import {
   RADARR_DOWNLOAD,
   SONARR_BLACKHOLE,
   RADARR_BLACKHOLE,
+  logger,
 } from "../init-config";
 
 /**
  *  For each completed torrent, delete the torrent file, download folder and database entry.
  */
 async function cleanup() {
-  const completed_torrents = await prisma.torrent.findMany({
-    where: { status: TorrentStatus.COMPLETED },
-  });
-  const download_paths = completed_torrents.map((torrent) => {
-    let download_path =
-      torrent.media_manager === MediaManager.SONARR
-        ? SONARR_DOWNLOAD
-        : RADARR_DOWNLOAD;
-    download_path = path.join(download_path, `${torrent.seedr_id}`);
-    return download_path;
-  });
-  const torrent_files = completed_torrents.map((torrent) => {
-    let torrent_path =
-      torrent.media_manager === MediaManager.SONARR
-        ? SONARR_BLACKHOLE
-        : RADARR_BLACKHOLE;
-    torrent_path = path.join(torrent_path, torrent.filename);
-    return torrent_path;
-  });
-  await Promise.all(download_paths.map((download) => fs.remove(download))); // Remove empty download directories
-  await Promise.all(torrent_files.map((file) => fs.remove(file))); // Remove torrent file
-  await prisma.torrent.deleteMany({
-    where: {
-      status: TorrentStatus.COMPLETED,
-    },
-  }); // Remove completed torrents from database
+  try {
+    const completed_torrents = await prisma.torrent.findMany({
+      where: { status: TorrentStatus.COMPLETED },
+    });
+    const download_paths = completed_torrents.map((torrent) => {
+      let download_path =
+        torrent.media_manager === MediaManager.SONARR
+          ? SONARR_DOWNLOAD
+          : RADARR_DOWNLOAD;
+      download_path = path.join(download_path, `${torrent.seedr_id}`);
+      return download_path;
+    });
+    const torrent_files = completed_torrents.map((torrent) => {
+      let torrent_path =
+        torrent.media_manager === MediaManager.SONARR
+          ? SONARR_BLACKHOLE
+          : RADARR_BLACKHOLE;
+      torrent_path = path.join(torrent_path, torrent.filename);
+      return torrent_path;
+    });
+    await Promise.all(download_paths.map((download) => fs.remove(download))); // Remove empty download directories
+    await Promise.all(torrent_files.map((file) => fs.remove(file))); // Remove torrent file
+    await prisma.torrent.deleteMany({
+      where: {
+        status: TorrentStatus.COMPLETED,
+      },
+    }); // Remove completed torrents from database
+  } catch (error: any) {
+    logger.error({ method: "jobs.cleanup", message: error.message });
+  }
 }
 
 export default cleanup;

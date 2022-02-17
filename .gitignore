@@ -5,3 +5,4 @@ yarn-error.log
 prisma/*.db
 prisma/*.db-journal
 dump
+logs

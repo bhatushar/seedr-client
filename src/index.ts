@@ -7,6 +7,7 @@ import {
   RADARR_DOWNLOAD,
   SONARR_WATCH,
   RADARR_WATCH,
+  logger,
 } from "./init-config";
 import checkForNewTorrents from "./jobs/new-torrents";
 import uploadToSeedr from "./jobs/upload-to-seedr";
@@ -27,12 +28,12 @@ async function main() {
     await Promise.all(directories.map((dir) => fs.mkdirp(dir)));
 
     // Schedule jobs
-    cron.schedule("0 * * * * *", async () => await checkForNewTorrents());
-    cron.schedule("15 * * * * *", async () => await uploadToSeedr());
-    cron.schedule("30 * * * * *", async () => await downloadFromSeedr());
-    cron.schedule("45 * * * * *", async () => cleanup());
-  } catch (err) {
-    console.error(err);
+    cron.schedule("*/2 * * * * *", async () => await checkForNewTorrents());
+    cron.schedule("*/5 * * * * *", async () => await uploadToSeedr());
+    // cron.schedule("30 * * * * *", async () => await downloadFromSeedr());
+    // cron.schedule("45 * * * * *", async () => cleanup());
+  } catch (error: any) {
+    logger.error({ method: "main", message: error.message });
   }
 }
 

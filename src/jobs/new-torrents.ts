@@ -1,5 +1,10 @@
 import fs from "fs-extra";
-import { prisma, SONARR_BLACKHOLE, RADARR_BLACKHOLE } from "../init-config";
+import {
+  prisma,
+  SONARR_BLACKHOLE,
+  RADARR_BLACKHOLE,
+  logger,
+} from "../init-config";
 import { MediaManager, TorrentFileType, TorrentStatus } from "../types";
 
 /**
@@ -67,8 +72,11 @@ async function checkForNewTorrents() {
         })
       )
     );
-  } catch (error) {
-    console.error(error);
+  } catch (error: any) {
+    logger.error({
+      method: "jobs.checkForNewTorrents",
+      message: error.message,
+    });
   }
 }
 

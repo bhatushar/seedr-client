@@ -30,6 +30,8 @@
     "fuse.js": "^6.5.3",
     "node-cron": "^3.0.0",
     "sqlite3": "^5.0.2",
-    "unzipper": "^0.10.11"
+    "unzipper": "^0.10.11",
+    "winston": "^3.6.0",
+    "winston-daily-rotate-file": "^4.6.1"
   }
 }

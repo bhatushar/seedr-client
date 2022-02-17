@@ -1,7 +1,7 @@
 import axios from "axios";
 import FormData from "form-data";
 import { createReadStream } from "fs";
-import { SEEDR_EMAIL, SEEDR_PASSWORD } from "./init-config";
+import { logger, SEEDR_EMAIL, SEEDR_PASSWORD } from "./init-config";
 import unzipper from "unzipper";
 
 /**
@@ -38,8 +38,8 @@ async function getRootFolders(): Promise<ISeedrFolder[]> {
       },
     });
     return response.data.folders;
-  } catch (error) {
-    console.error(error);
+  } catch (error: any) {
+    logger.error({ method: "seedr.getRootFolders", message: error.message });
     return [];
   }
 }
@@ -67,8 +67,8 @@ async function addTorrentMagnet(
       }
     );
     return response.data;
-  } catch (error) {
-    console.error(error);
+  } catch (error: any) {
+    logger.error({ method: "seedr.addTorrentMagnet", message: error.message });
   }
 }
 
@@ -96,8 +96,8 @@ async function addTorrentFile(
       }
     );
     return response.data;
-  } catch (error) {
-    console.error(error);
+  } catch (error: any) {
+    logger.error({ method: "seedr.addTorrentFile", message: error.message });
   }
 }
 
@@ -130,7 +130,7 @@ async function downloadFolder(
     response.data.pipe(parse_stream);
     parse_stream.on("finish", on_success);
     parse_stream.on("error", on_fail);
-  } catch (error) {
+  } catch (error: any) {
     on_fail(error);
   }
 }

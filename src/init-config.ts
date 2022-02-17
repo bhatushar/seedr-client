@@ -1,5 +1,7 @@
 import dotenv from "dotenv";
 import path from "path";
+import winston, { format, transports } from "winston";
+import "winston-daily-rotate-file";
 import { PrismaClient } from "@prisma/client";
 
 dotenv.config();
@@ -30,8 +32,24 @@ const RADARR_WATCH =
 
 const prisma = new PrismaClient();
 
+const logger = winston.createLogger({
+  format: format.combine(
+    format.timestamp({ format: "YYYY-MM-DD HH:mm:ss.SSSZZ" }),
+    format.json()
+  ),
+  transports: [
+    new transports.DailyRotateFile({
+      dirname: process.env.LOG_DIR || "./logs/",
+      filename: "app-%DATE%.log",
+      datePattern: "YYYY-MM-DD",
+      maxFiles: 7,
+    }),
+  ],
+});
+
 export {
   prisma,
+  logger,
   SEEDR_EMAIL,
   SEEDR_PASSWORD,
   SONARR_BLACKHOLE,

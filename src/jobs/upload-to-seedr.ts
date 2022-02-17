@@ -1,6 +1,11 @@
 import path from "path";
 import fs from "fs-extra";
-import { prisma, RADARR_BLACKHOLE, SONARR_BLACKHOLE } from "../init-config";
+import {
+  logger,
+  prisma,
+  RADARR_BLACKHOLE,
+  SONARR_BLACKHOLE,
+} from "../init-config";
 import { MediaManager, TorrentFileType, TorrentStatus } from "../types";
 import * as seedrApi from "../seedr-api";
 import { Torrent } from "@prisma/client";
@@ -33,9 +38,12 @@ async function attemptUpload(torrents: NewTorrents[]) {
         }
         // For *.torrent files
         return seedrApi.addTorrentFile(torrent_path);
-      } catch (error) {
-        console.error(error);
-        console.log(`[${media_manager}]Failed to upload: ${filename}`);
+      } catch (error: any) {
+        logger.error({
+          file: filename,
+          provider: media_manager,
+          message: error.message,
+        });
       }
     })
   );
@@ -54,12 +62,29 @@ function getSuccessfulUploads(
 ) {
   return torrents.reduce((uploaded: UploadedTorrents[], torrent, i) => {
     const result = results[i];
-    if (result)
-      uploaded.push({
-        filename: torrent.filename,
-        media_manager: torrent.media_manager,
-        torrent_name: result.title,
-      });
+    if (result) {
+      if (result.error) {
+        // File uploaded, but rejected by Seedr
+        logger.error({
+          file: torrent.filename,
+          provider: torrent.media_manager,
+          message: result.error,
+        });
+      } else {
+        uploaded.push({
+          filename: torrent.filename,
+          media_manager: torrent.media_manager,
+          torrent_name: result.title,
+        });
+        logger.info({
+          file: torrent.filename,
+          provider: torrent.media_manager,
+          torrent: result.title,
+          message: "Upload successful",
+        });
+      }
+    } // else error handled by attemptUpload()
+
     return uploaded;
   }, []);
 }
@@ -75,11 +100,9 @@ async function uploadToSeedr() {
       where: { status: TorrentStatus.NEW },
     });
     if (torrents.length === 0) return; // No torrents to upload
-    console.log("Torrents to be uploaded: ", torrents);
 
     const results = await attemptUpload(torrents);
     const uploaded_torrents = getSuccessfulUploads(torrents, results);
-    console.log("Torrents successfully uploaded: ", uploaded_torrents);
 
     // Mark uploaded torrent as UPLOADED and save their torrent name
     await prisma.$transaction(
@@ -90,8 +113,8 @@ async function uploadToSeedr() {
         });
       })
     );
-  } catch (error) {
-    console.error(error);
+  } catch (error: any) {
+    logger.error({ method: "jobs.uploadToSeedr", message: error.message });
   }
 }
 

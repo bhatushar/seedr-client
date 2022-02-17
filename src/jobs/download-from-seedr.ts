@@ -2,6 +2,7 @@ import fs from "fs-extra";
 import path from "path";
 import Fuse from "fuse.js";
 import {
+  logger,
   prisma,
   RADARR_DOWNLOAD,
   RADARR_WATCH,
@@ -36,6 +37,10 @@ async function getFinishedTorrents() {
       if (matches.length === 0) return torrents;
       const finished: Torrent = { ...current, seedr_id: matches[0].item.id };
       torrents.push(finished);
+      logger.info({
+        torrent: current.torrent_name,
+        message: "Downloading finished on Seedr",
+      });
       return torrents;
     },
     []
@@ -75,7 +80,10 @@ const onDownloadSuccess = async (seedr_id: number, download_path: string) => {
       where: { seedr_id },
       data: { status: TorrentStatus.DOWNLOADED },
     });
-    console.log("Download completed: ", download_path);
+    logger.info({
+      torrent: downloaded_torrent.torrent_name,
+      message: `Download completed: ${download_path}`,
+    });
 
     // Move downloads to the watch folder
     const move_path =
@@ -90,6 +98,10 @@ const onDownloadSuccess = async (seedr_id: number, download_path: string) => {
         return fs.move(src, dst);
       })
     );
+    logger.info({
+      torrent: downloaded_torrent.torrent_name,
+      message: "Downloaded files moved to watch folder",
+    });
     await prisma.torrent.update({
       where: {
         filename_media_manager: {
@@ -99,8 +111,8 @@ const onDownloadSuccess = async (seedr_id: number, download_path: string) => {
       },
       data: { status: TorrentStatus.COMPLETED },
     });
-  } catch (error) {
-    console.error(error);
+  } catch (error: any) {
+    logger.error({ method: "jobs.onDownloadSuccess", message: error.message });
   }
 };
 
@@ -111,11 +123,16 @@ const onDownloadSuccess = async (seedr_id: number, download_path: string) => {
  * @param download_path
  */
 const onDownloadFail = async (seedr_id: number, download_path: string) => {
-  await prisma.torrent.update({
-    where: { seedr_id },
-    data: { status: TorrentStatus.UPLOADED },
-  });
-  await fs.rm(download_path, { recursive: true, force: true });
+  try {
+    logger.warn(`Download failed: ${download_path}`);
+    await prisma.torrent.update({
+      where: { seedr_id },
+      data: { status: TorrentStatus.UPLOADED },
+    });
+    await fs.rm(download_path, { recursive: true, force: true });
+  } catch (error: any) {
+    logger.error({ method: "jobs.onDownloadFail", message: error.message });
+  }
 };
 
 /**
@@ -124,42 +141,49 @@ const onDownloadFail = async (seedr_id: number, download_path: string) => {
  * Attachese event handlers to download stream.
  */
 async function downloadFromSeedr() {
-  // Only download one file at a time to preserve bandwidth
-  const activeDownloads = await prisma.torrent.count({
-    where: { status: TorrentStatus.DOWNLOADING },
-  });
-  if (activeDownloads) return;
+  try {
+    // Only download one file at a time to preserve bandwidth
+    const activeDownloads = await prisma.torrent.count({
+      where: { status: TorrentStatus.DOWNLOADING },
+    });
+    if (activeDownloads) return;
 
-  const finished_torrents = await getFinishedTorrents();
-  if (finished_torrents.length === 0) return; // No torrent to download
-  await saveSeedrIds(finished_torrents);
+    const finished_torrents = await getFinishedTorrents();
+    if (finished_torrents.length === 0) return; // No torrent to download
+    await saveSeedrIds(finished_torrents);
 
-  // Prepare download
-  const download = finished_torrents[0]; // Grab the first torrent from Seedr
-  const base_path =
-    download.media_manager === MediaManager.SONARR
-      ? SONARR_DOWNLOAD
-      : RADARR_DOWNLOAD;
-  const download_path = path.join(base_path, `${download.seedr_id}`);
-  await fs.mkdir(download_path, { recursive: true });
+    // Prepare download
+    const download = finished_torrents[0]; // Grab the first torrent from Seedr
+    const base_path =
+      download.media_manager === MediaManager.SONARR
+        ? SONARR_DOWNLOAD
+        : RADARR_DOWNLOAD;
+    const download_path = path.join(base_path, `${download.seedr_id}`);
+    await fs.mkdir(download_path, { recursive: true });
 
-  // Start downlaoding
-  console.log("Downloading: ", download);
-  seedrApi.downloadFolder(
-    download.seedr_id as number,
-    download_path,
-    async () => {
-      await onDownloadSuccess(download.seedr_id as number, download_path);
-    },
-    async (error) => {
-      console.error(error);
-      await onDownloadFail(download.seedr_id as number, download_path);
-    }
-  );
-  await prisma.torrent.update({
-    where: { seedr_id: download.seedr_id as number }, // Guaranteed to be a number
-    data: { status: TorrentStatus.DOWNLOADING },
-  });
+    // Start downlaoding
+    logger.info({
+      torrent: download.torrent_name,
+      message: `Starting download: ${download_path}`,
+    });
+    seedrApi.downloadFolder(
+      download.seedr_id as number,
+      download_path,
+      async () => {
+        await onDownloadSuccess(download.seedr_id as number, download_path);
+      },
+      async (error) => {
+        console.error(error);
+        await onDownloadFail(download.seedr_id as number, download_path);
+      }
+    );
+    await prisma.torrent.update({
+      where: { seedr_id: download.seedr_id as number }, // Guaranteed to be a number
+      data: { status: TorrentStatus.DOWNLOADING },
+    });
+  } catch (error: any) {
+    logger.error({ method: "jobs.downloadFromSeedr", message: error.message });
+  }
 }
 
 export default downloadFromSeedr;
