@@ -23,6 +23,7 @@ interface ISeedrTorrent {
   user_torrent_id: number;
   title: string;
   torrent_hash: string;
+  error?: string;
 }
 
 /**
