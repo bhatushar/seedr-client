@@ -26,7 +26,7 @@ async function attemptUpload(torrents: NewTorrents[]) {
             ? SONARR_BLACKHOLE
             : RADARR_BLACKHOLE;
         const torrent_path = path.join(base_path, filename);
-        if (type == TorrentFileType.MAGNET) {
+        if (type === TorrentFileType.MAGNET) {
           // For *.magnet files, read the content and pass it as a url
           const magnet_link = await fs.readFile(torrent_path, "utf8");
           return seedrApi.addTorrentMagnet(magnet_link);
